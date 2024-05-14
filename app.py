@@ -2,11 +2,15 @@ from fastapi import FastAPI, Body, Request
 from pydantic import BaseModel
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
+from starlette.websockets import WebSocket, WebSocketDisconnect
 
 from dataworkers.monday import AuthMondayWorker, CreateBoardMondayBackend, ChangeBoardMondayBackend
 from models.forms import LoginFormModel, CreateBoardModel, ChangeTaskStatusModel
 
 
+from routers.login import router as login_router
+from routers.socket_router import router as websocket_router
+from routers.board import router as board_router
 
 
 import logging
@@ -16,7 +20,9 @@ from starlette.responses import RedirectResponse
 from starlette.staticfiles import StaticFiles
 
 
-app = FastAPI()
+app = FastAPI(
+
+)
 
 
 origins = ["*"]
@@ -29,27 +35,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(login_router)
+app.include_router(websocket_router)
+app.include_router(board_router)
+
 
 @app.get("/")
 async def index():
     return RedirectResponse(url="./build/index.html")
-
-# app.mount("/", StaticFiles(directory="build/static/ui/"), name="ui")
-
-
-@app.post('/login')
-async def login(data: LoginFormModel):
-    print(data)
-    auth_worker = AuthMondayWorker()
-    result = auth_worker.check_auth_data(data)
-    return JSONResponse(content=result)
-
-
-@app.post('/create-board')
-async def create_board(data: CreateBoardModel):
-    print(data)
-    result = CreateBoardMondayBackend().run(data.tag_id, data.email)
-    return JSONResponse(content=result)
 
 
 @app.post('/change-task-status')
@@ -58,5 +51,12 @@ async def change_task_status(data: ChangeTaskStatusModel):
     print(data)
     result = ChangeBoardMondayBackend().run(data.board_id, data.item_id, data.status)
     return JSONResponse(content=result)
+
+
+
+
+
+
+
 
 

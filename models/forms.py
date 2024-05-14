@@ -9,10 +9,12 @@ class LoginFormModel(BaseModel):
 
 
 class AuthUserModel(BaseModel):
+    username: str = None
     email: str = None
     password: str = None
     tags: List[int] = None
     id: str = None
+    status: str = None
 
 
 class CreateBoardModel(BaseModel):
